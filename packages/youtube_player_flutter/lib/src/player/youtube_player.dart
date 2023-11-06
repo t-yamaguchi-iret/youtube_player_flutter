@@ -298,23 +298,20 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
         fit: StackFit.expand,
         clipBehavior: Clip.none,
         children: [
-          Transform.scale(
-            scale: controller.value.isFullScreen
-                ? (1 / _aspectRatio * MediaQuery.of(context).size.width) /
-                    MediaQuery.of(context).size.height
-                : 1,
-            child: RawYoutubePlayer(
-              key: widget.key,
-              onEnded: (YoutubeMetaData metaData) {
-                if (controller.flags.loop) {
-                  controller.load(controller.metadata.videoId,
-                      startAt: controller.flags.startAt,
-                      endAt: controller.flags.endAt);
-                }
+          // 端末によってフルスクリーン時の動画が見切れる現象の対応
+          //
+          // フルスクリーン（横向き）再生時に画面縦幅（短辺）を画面横幅（長辺）と動画のアスペクト比を掛け合わせてスケールしていた事が原因。
+          // スケールを行わなければ動画は画面内に収まるように最大表示されるのでスケール処理を削除した。
+          // issue: https://github.com/sarbagyastha/youtube_player_flutter/issues/241#issuecomment-971206641
+          RawYoutubePlayer(
+            key: widget.key,
+            onEnded: (YoutubeMetaData metaData) {
+              if (controller.flags.loop) {
+                controller.load(controller.metadata.videoId, startAt: controller.flags.startAt, endAt: controller.flags.endAt);
+              }
 
-                widget.onEnded?.call(metaData);
-              },
-            ),
+              widget.onEnded?.call(metaData);
+            },
           ),
           if (!controller.flags.hideThumbnail)
             AnimatedOpacity(
